@@ -1,18 +1,18 @@
 {
-  "PORT": 3000,
+  "PORT": 4000,
   "HOSTNAME": "http://ml-api-adapter",
   "DFSP_URLS": {
     "dfsp1": {
-      "transfers": "http://localhost:4545/dfsp1/transfers",
-      "error": "http://localhost:4545/dfsp1/transfers/error"
+      "transfers": "http://localhost:1080/transfers",
+      "error": "http://localhost:1080/transfers/error"
     },
     "dfsp2": {
-      "transfers": "http://localhost:4545/dfsp2/transfers",
-      "error": "http://localhost:4545/dfsp2/transfers/error"
+      "transfers": "http://localhost:1080/transfers",
+      "error": "http://localhost:1080/transfers/error"
     },
     "dfsp3": {
-      "transfers": "http://localhost:4545/dfsp3/transfers",
-      "error": "http://localhost:4545/dfsp3/transfers/error"
+      "transfers": "http://localhost:1080/transfers",
+      "error": "http://localhost:1080/transfers/error"
     }
   },
   "AMOUNT": {

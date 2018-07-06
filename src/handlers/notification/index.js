@@ -63,6 +63,7 @@ const consumeMessage = async (error, message) => {
     message = (!Array.isArray(message) ? [message] : message)
 
     for (let msg of message) {
+      Logger.info(`guid=${msg.value.id}:uuid - startNotificationHandler:process`)
       Logger.info('Notification::consumeMessage::processMessage')
       let res = await processMessage(msg).catch(err => {
         Logger.error(`Error processing the kafka message - ${err}`)
@@ -70,6 +71,7 @@ const consumeMessage = async (error, message) => {
         return reject(err)
       })
       notificationConsumer.commitMessageSync(msg)
+      Logger.info(`guid=${msg.value.id}:uuid - endNotificationHandler:process`)
       return resolve(res)
     }
   })
