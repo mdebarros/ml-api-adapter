@@ -67,7 +67,7 @@ const consumeMessage = async (error, message) => {
     Logger.info(`Notification:consumeMessage message: - ${JSON.stringify(message)}`)
 
     message = (!Array.isArray(message) ? [message] : message)
-
+    var result = true
     for (let msg of message) {
       var metricStartForNow = (new Date()).getTime()
       Logger.info(`guid=${msg.value.id}:uuid - startNotificationHandler:process`)
@@ -81,12 +81,16 @@ const consumeMessage = async (error, message) => {
       Logger.info(`guid=${msg.value.id}:uuid - endNotificationHandler:process`)
       var metricEndForNow = (new Date()).getTime()
       var metricMlAPIConsumeMessageForEachMsg = metricEndForNow - metricStartForNow
-      Perf4js.info(msg.value.id, metricMlAPIConsumeMessageForEachMsg, 'metricMlAPIConsumeMessageForEachMsg')
-      return resolve(res)
+      Perf4js.info(metricStartNow, metricMlAPIConsumeMessageForEachMsg, 'metricMlAPIConsumeMessageForEachMsg')
+      if (!res) {
+        result = false
+      }
+      // return resolve(res)
     }
     var metricEndNow = (new Date()).getTime()
     var metricMlAPIConsumeMessage = metricEndNow - metricStartNow
     Perf4js.info(metricStartNow, metricMlAPIConsumeMessage, 'metricMlAPIConsumeMessage')
+    return resolve(result)
   })
 }
 
@@ -106,26 +110,26 @@ const processMessage = async (msg) => {
       const result = await Callback.sendCallback(Config.DFSP_URLS[to].transfers, 'post', content.headers, content.payload)
       let metricEndNow = (new Date()).getTime()
       let metricMlAPIProcessMessage = metricEndNow - metricStartNow
-      Perf4js.info(msg.value.id, metricMlAPIProcessMessage, 'metricMlAPIProcessMessage')
+      Perf4js.info(metricStartNow, metricMlAPIProcessMessage, 'metricMlAPIProcessMessage')
       return result
     } else if (action.toLowerCase() === 'prepare' && status.toLowerCase() !== 'success') {
       const result = await Callback.sendCallback(Config.DFSP_URLS[from].error, 'put', content.headers, content.payload)
       let metricEndNow = (new Date()).getTime()
       let metricMlAPIProcessMessage = metricEndNow - metricStartNow
-      Perf4js.info(msg.value.id, metricMlAPIProcessMessage, 'metricMlAPIProcessMessage')
+      Perf4js.info(metricStartNow, metricMlAPIProcessMessage, 'metricMlAPIProcessMessage')
       return result
     } else if (action.toLowerCase() === 'commit' && status.toLowerCase() === 'success') {
       const result1 = await Callback.sendCallback(`${Config.DFSP_URLS[from].transfers}/${id}`, 'put', content.headers, content.payload)
       const result2 = await Callback.sendCallback(`${Config.DFSP_URLS[to].transfers}/${id}`, 'put', content.headers, content.payload)
       let metricEndNow = (new Date()).getTime()
       let metricMlAPIProcessMessage = metricEndNow - metricStartNow
-      Perf4js.info(msg.value.id, metricMlAPIProcessMessage, 'metricMlAPIProcessMessage')
+      Perf4js.info(metricStartNow, metricMlAPIProcessMessage, 'metricMlAPIProcessMessage')
       return result2
     } else if (action.toLowerCase() === 'commit' && status.toLowerCase() !== 'success') {
       const result = await Callback.sendCallback(Config.DFSP_URLS[from].error, 'put', content.headers, content.payload)
       let metricEndNow = (new Date()).getTime()
       let metricMlAPIProcessMessage = metricEndNow - metricStartNow
-      Perf4js.info(msg.value.id, metricMlAPIProcessMessage, 'metricMlAPIProcessMessage')
+      Perf4js.info(metricStartNow, metricMlAPIProcessMessage, 'metricMlAPIProcessMessage')
       return result
     } else {
       const err = new Error('invalid action received from kafka')
