@@ -23,6 +23,7 @@
 'use strict'
 
 const Logger = require('@mojaloop/central-services-shared').Logger
+const Perf4js = require('@mojaloop/central-services-shared').Perf4js
 const Uuid = require('uuid4')
 const Utility = require('../../lib/utility')
 const Kafka = require('../../lib/kafka')
@@ -32,6 +33,7 @@ const PREPARE = 'prepare'
 const FULFIL = 'fulfil'
 
 const prepare = async (headers, message) => {
+  var metricStartNow = (new Date()).getTime()
   Logger.debug('prepare::start(%s, %s)', headers, message)
   try {
     const kafkaConfig = Utility.getKafkaConfig(Utility.ENUMS.PRODUCER, TRANSFER.toUpperCase(), PREPARE.toUpperCase())
@@ -61,6 +63,9 @@ const prepare = async (headers, message) => {
       topicName: Utility.getParticipantTopicName(message.payerFsp, TRANSFER, PREPARE) // `topic-${message.payerFsp}-transfer-prepare`
     }
     await Kafka.Producer.produceMessage(messageProtocol, topicConfig, kafkaConfig)
+    var metricEndNow = (new Date()).getTime()
+    var metricMlAPIRoutePrepare = metricEndNow - metricStartNow
+    Perf4js.info(metricStartNow, metricMlAPIRoutePrepare, 'metricMlAPIRoutePrepare')
     return true
   } catch (err) {
     Logger.error(`Kafka error:: ERROR:'${err}'`)
@@ -68,6 +73,7 @@ const prepare = async (headers, message) => {
   }
 }
 const fulfil = async (id, headers, message) => {
+  var metricStartNow = (new Date()).getTime()
   Logger.debug('prepare::start(%s, %s, %s)', id, headers, message)
   try {
     const kafkaConfig = Utility.getKafkaConfig(Utility.ENUMS.PRODUCER, TRANSFER.toUpperCase(), FULFIL.toUpperCase())
@@ -97,6 +103,9 @@ const fulfil = async (id, headers, message) => {
       topicName: Utility.getFulfilTopicName() // `topic-${message.payerFsp}-transfer-prepare`
     }
     await Kafka.Producer.produceMessage(messageProtocol, topicConfig, kafkaConfig)
+    var metricEndNow = (new Date()).getTime()
+    var metricMlAPIRouteFulfil = metricEndNow - metricStartNow
+    Perf4js.info(metricStartNow, metricMlAPIRouteFulfil, 'metricMlAPIRouteFulfil')
     return true
   } catch (err) {
     Logger.error(`Kafka error:: ERROR:'${err}'`)
