@@ -52,7 +52,12 @@
               "client.id": "topic-notification-event",
               "group.id": "kafka-ml-api-adapter",
               "metadata.broker.list": "localhost:9092",
-              "enable.auto.commit": false
+              "socket.blocking.max.ms": 1,
+              "fetch.wait.max.ms": 1,
+              "fetch.error.backoff.ms": 1,
+              "queue.buffering.max.ms": 1,
+              "broker.version.fallback": "0.10.1.0",
+              "api.version.request": false
             }
           }
         }
@@ -74,10 +79,12 @@
               "message.send.max.retries": 2,
               "socket.keepalive.enable": true,
               "queue.buffering.max.messages": 10,
-              "queue.buffering.max.ms": 50,
               "batch.num.messages": 100,
-              "api.version.request": true,
-              "dr_cb": true
+              "dr_cb": true,
+              "socket.blocking.max.ms": 1,
+              "queue.buffering.max.ms": 1,
+              "broker.version.fallback": "0.10.1.0",
+              "api.version.request": false
             }
           }
         },
@@ -95,10 +102,12 @@
               "message.send.max.retries": 2,
               "socket.keepalive.enable": true,
               "queue.buffering.max.messages": 10,
-              "queue.buffering.max.ms": 50,
               "batch.num.messages": 100,
-              "api.version.request": true,
-              "dr_cb": true
+              "dr_cb": true,
+              "socket.blocking.max.ms": 1,
+              "queue.buffering.max.ms": 1,
+              "broker.version.fallback": "0.10.1.0",
+              "api.version.request": false
             }
           }
         }
