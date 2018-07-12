@@ -24,6 +24,7 @@
 const Consumer = require('@mojaloop/central-services-shared').Kafka.Consumer
 const Logger = require('@mojaloop/central-services-shared').Logger
 const Config = require('../../lib/config')
+const KafkaConfig = Config.KAFKA_CONFIG
 const Utility = require('../../lib/utility')
 const Callback = require('./callbacks.js')
 const Perf4js = require('@mojaloop/central-services-shared').Perf4js
@@ -72,12 +73,16 @@ const consumeMessage = async (error, message) => {
       var metricStartForNow = (new Date()).getTime()
       Logger.info(`guid=${msg.value.id}:uuid - startNotificationHandler:process`)
       Logger.info('Notification::consumeMessage::processMessage')
-      let res = await processMessage(msg).catch(err => {
+      let res = await processMessage(msg).catch(async err => {
         Logger.error(`Error processing the kafka message - ${err}`)
-        notificationConsumer.commitMessageSync(msg)
+        if (KafkaConfig.COMMIT_ENABLED) {
+          await notificationConsumer.commitMessageSync(msg)
+        }
         return reject(err)
       })
-      notificationConsumer.commitMessageSync(msg)
+      if (KafkaConfig.COMMIT_ENABLED) {
+        await notificationConsumer.commitMessageSync(msg)
+      }
       Logger.info(`guid=${msg.value.id}:uuid - endNotificationHandler:process`)
       var metricEndForNow = (new Date()).getTime()
       var metricMlAPIConsumeMessageForEachMsg = metricEndForNow - metricStartForNow

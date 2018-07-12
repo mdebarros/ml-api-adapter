@@ -30,10 +30,13 @@ let p
 const produceMessage = async (messageProtocol, topicConf, config) => {
   try {
     Logger.debug('Producer::start::topic=' + topicConf.topicName)
-    p = new Producer(config)
-    Logger.debug('Producer::connect::start')
-    await p.connect()
-    Logger.debug('Producer::connect::end')
+    if (!p) {
+      p = new Producer(config)
+
+      Logger.debug('Producer::connect::start')
+      await p.connect()
+      Logger.debug('Producer::connect::end')
+    }
     Logger.debug(`Producer.sendMessage:: messageProtocol:'${JSON.stringify(messageProtocol)}'`)
     await p.sendMessage(messageProtocol, topicConf)
     Logger.debug('Producer::end')
