@@ -26,11 +26,13 @@ const Logger = require('@mojaloop/central-services-shared').Logger
 const Config = require('../../lib/config')
 const Utility = require('../../lib/utility')
 const Callback = require('./callbacks.js')
+const Perf4js = require('@mojaloop/central-services-shared').Perf4js
 const NOTIFICATION = 'notification'
 const EVENT = 'event'
 let notificationConsumer = {}
 
 const startConsumer = async () => {
+  var metricStartNow = (new Date()).getTime()
   Logger.info('Notification::startConsumer')
   try {
     let topicName = Utility.getNotificationTopicName()
@@ -45,6 +47,9 @@ const startConsumer = async () => {
     Logger.info('Kafka Consumer connected')
     await notificationConsumer.consume(consumeMessage)
     Logger.info('Kafka Consumer handler created')
+    var metricEndNow = (new Date()).getTime()
+    var metricMlAPIStartConsume = metricEndNow - metricStartNow
+    Perf4js.info(metricStartNow, metricMlAPIStartConsume, 'metricMlAPIStartConsume')
     return true
   } catch (err) {
     Logger.error(`error consuming kafka messages- ${err}`)
@@ -52,6 +57,7 @@ const startConsumer = async () => {
   }
 }
 const consumeMessage = async (error, message) => {
+  var metricStartNow = (new Date()).getTime()
   Logger.info('Notification::consumeMessage')
   return new Promise(async (resolve, reject) => {
     if (error) {
@@ -63,6 +69,7 @@ const consumeMessage = async (error, message) => {
     message = (!Array.isArray(message) ? [message] : message)
 
     for (let msg of message) {
+      var metricStartForNow = (new Date()).getTime()
       Logger.info(`guid=${msg.value.id}:uuid - startNotificationHandler:process`)
       Logger.info('Notification::consumeMessage::processMessage')
       let res = await processMessage(msg).catch(err => {
@@ -72,12 +79,19 @@ const consumeMessage = async (error, message) => {
       })
       notificationConsumer.commitMessageSync(msg)
       Logger.info(`guid=${msg.value.id}:uuid - endNotificationHandler:process`)
+      var metricEndForNow = (new Date()).getTime()
+      var metricMlAPIConsumeMessageForEachMsg = metricEndForNow - metricStartForNow
+      Perf4js.info(msg.value.id, metricMlAPIConsumeMessageForEachMsg, 'metricMlAPIConsumeMessageForEachMsg')
       return resolve(res)
     }
+    var metricEndNow = (new Date()).getTime()
+    var metricMlAPIConsumeMessage = metricEndNow - metricStartNow
+    Perf4js.info(metricStartNow, metricMlAPIConsumeMessage, 'metricMlAPIConsumeMessage')
   })
 }
 
 const processMessage = async (msg) => {
+  var metricStartNow = (new Date()).getTime()
   try {
     Logger.info('Notification::processMessage')
     if (!msg.value || !msg.value.content || !msg.value.content.headers || !msg.value.content.payload) {
@@ -89,14 +103,30 @@ const processMessage = async (msg) => {
     Logger.info('Notification::processMessage action: ' + action)
     Logger.info('Notification::processMessage status: ' + status)
     if (action === 'prepare' && status === 'success') {
-      return await Callback.sendCallback(Config.DFSP_URLS[to].transfers, 'post', content.headers, content.payload)
+      const result = await Callback.sendCallback(Config.DFSP_URLS[to].transfers, 'post', content.headers, content.payload)
+      let metricEndNow = (new Date()).getTime()
+      let metricMlAPIProcessMessage = metricEndNow - metricStartNow
+      Perf4js.info(msg.value.id, metricMlAPIProcessMessage, 'metricMlAPIProcessMessage')
+      return result
     } else if (action.toLowerCase() === 'prepare' && status.toLowerCase() !== 'success') {
-      return await Callback.sendCallback(Config.DFSP_URLS[from].error, 'put', content.headers, content.payload)
+      const result = await Callback.sendCallback(Config.DFSP_URLS[from].error, 'put', content.headers, content.payload)
+      let metricEndNow = (new Date()).getTime()
+      let metricMlAPIProcessMessage = metricEndNow - metricStartNow
+      Perf4js.info(msg.value.id, metricMlAPIProcessMessage, 'metricMlAPIProcessMessage')
+      return result
     } else if (action.toLowerCase() === 'commit' && status.toLowerCase() === 'success') {
-      await Callback.sendCallback(`${Config.DFSP_URLS[from].transfers}/${id}`, 'put', content.headers, content.payload)
-      return await Callback.sendCallback(`${Config.DFSP_URLS[to].transfers}/${id}`, 'put', content.headers, content.payload)
+      const result1 = await Callback.sendCallback(`${Config.DFSP_URLS[from].transfers}/${id}`, 'put', content.headers, content.payload)
+      const result2 = await Callback.sendCallback(`${Config.DFSP_URLS[to].transfers}/${id}`, 'put', content.headers, content.payload)
+      let metricEndNow = (new Date()).getTime()
+      let metricMlAPIProcessMessage = metricEndNow - metricStartNow
+      Perf4js.info(msg.value.id, metricMlAPIProcessMessage, 'metricMlAPIProcessMessage')
+      return result2
     } else if (action.toLowerCase() === 'commit' && status.toLowerCase() !== 'success') {
-      return await Callback.sendCallback(Config.DFSP_URLS[from].error, 'put', content.headers, content.payload)
+      const result = await Callback.sendCallback(Config.DFSP_URLS[from].error, 'put', content.headers, content.payload)
+      let metricEndNow = (new Date()).getTime()
+      let metricMlAPIProcessMessage = metricEndNow - metricStartNow
+      Perf4js.info(msg.value.id, metricMlAPIProcessMessage, 'metricMlAPIProcessMessage')
+      return result
     } else {
       const err = new Error('invalid action received from kafka')
       Logger.error(`error sending notification to the callback - ${err}`)

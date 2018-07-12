@@ -24,8 +24,10 @@
 
 const Logger = require('@mojaloop/central-services-shared').Logger
 const request = require('request')
+const Perf4js = require('@mojaloop/central-services-shared').Perf4js
 
 const sendCallback = async (url, method, headers, message) => {
+  var metricStartNow = (new Date()).getTime()
   delete headers['Content-Length']
   const options = {
     url,
@@ -43,6 +45,9 @@ const sendCallback = async (url, method, headers, message) => {
       return resolve(response.statusCode)
     })
   })
+  let metricEndNow = (new Date()).getTime()
+  let metricMlAPISendCallBack = metricEndNow - metricStartNow
+  Perf4js.info(message.id, metricMlAPISendCallBack, 'metricMlAPISendCallBack')
 }
 module.exports = {
   sendCallback
